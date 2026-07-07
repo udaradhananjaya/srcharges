@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holding Charges Calculator</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .calculator-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .result-box {
+            background: #eef2ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+            border: 1px solid #c7d2fe;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #444;
+        }
+        .total-row {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #111;
+            border-top: 2px solid #c7d2fe;
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-card">
+        <h2>Holding Charges</h2>
+        
+        <div class="form-group">
+            <label for="startDate">Starting Date</label>
+            <input type="date" id="startDate" onchange="calculateCharges()">
+        </div>
+
+        <div class="form-group">
+            <label for="endDate">Ending Date</label>
+            <input type="date" id="endDate" onchange="calculateCharges()">
+        </div>
+
+        <div class="form-group">
+            <label for="packages">Number of Packages</label>
+            <input type="number" id="packages" min="1" value="1" oninput="calculateCharges()">
+        </div>
+
+        <div class="result-box" id="resultBox" style="display: none;">
+            <div class="result-row">
+                <span>Days @ Rs. 50:</span>
+                <span id="tier1Days">0</span>
+            </div>
+            <div class="result-row">
+                <span>Days @ Rs. 100:</span>
+                <span id="tier2Days">0</span>
+            </div>
+            <div class="result-row total-row">
+                <span>Total Charge:</span>
+                <span id="totalCharge">Rs. 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set ending date to today's date automatically on load
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('endDate').value = `${yyyy}-${mm}-${dd}`;
+
+        function calculateCharges() {
+            const startInput = document.getElementById('startDate').value;
+            const endInput = document.getElementById('endDate').value;
+            const packages = parseInt(document.getElementById('packages').value) || 0;
+            const resultBox = document.getElementById('resultBox');
+
+            if (!startInput || !endInput || packages < 1) {
+                resultBox.style.display = 'none';
+                return;
+            }
+
+            // Parse dates, setting time to midnight for accurate day counting
+            const startDate = new Date(startInput + 'T00:00:00');
+            const endDate = new Date(endInput + 'T00:00:00');
+            const thresholdDate = new Date('2026-07-01T00:00:00');
+
+            if (endDate < startDate) {
+                alert("Ending date cannot be before starting date.");
+                resultBox.style.display = 'none';
+                return;
+            }
+
+            let tier1Count = 0; // Days at Rs. 50
+            let tier2Count = 0; // Days at Rs. 100
+
+            // Iterate day by day (inclusive of both start and end)
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                if (currentDate < thresholdDate) {
+                    tier1Count++;
+                } else {
+                    tier2Count++;
+                }
+                // Move to the next day
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            const tier1Cost = tier1Count * packages * 50;
+            const tier2Cost = tier2Count * packages * 100;
+            const totalCost = tier1Cost + tier2Cost;
+
+            // Update UI
+            document.getElementById('tier1Days').innerText = tier1Count;
+            document.getElementById('tier2Days').innerText = tier2Count;
+            document.getElementById('totalCharge').innerText = `Rs. ${totalCost.toFixed(2)}`;
+            resultBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
